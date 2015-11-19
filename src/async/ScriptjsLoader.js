@@ -22,11 +22,12 @@ import {
   getUrlObjChangedKeys,
 } from "../utils/makeUrl";
 
-export default class ScriptjsGoogleMap extends Component {
+export default class ScriptjsLoader extends Component {
   static propTypes = {
     ...urlObjDefinition,
-    // PropTypes for ScriptjsGoogleMap
+    // PropTypes for ScriptjsLoader
     loadingElement: PropTypes.node,
+    googleMapElement: PropTypes.element.isRequired,
   }
 
   state = {
@@ -37,10 +38,16 @@ export default class ScriptjsGoogleMap extends Component {
     if (!canUseDOM) {
       return;
     }
+    /*
+     * External commonjs require dependency -- begin
+     */
     const scriptjs = require("scriptjs");
-    const {protocol, hostname, port, pathname, query, ...restProps} = this.props;
+    /*
+     * External commonjs require dependency -- end
+     */
+    const {protocol, hostname, port, pathname, query} = this.props;
     const urlObj = {protocol, hostname, port, pathname, query};
-    const url =  makeUrl(urlObj);
+    const url = makeUrl(urlObj);
     scriptjs(url, () => this.setState({ isLoaded: true }));
   }
 
@@ -48,16 +55,13 @@ export default class ScriptjsGoogleMap extends Component {
     if ("production" !== process.env.NODE_ENV) {
       const changedKeys = getUrlObjChangedKeys(this.props, nextProps);
 
-      warning(0 === changedKeys.length, `ScriptjsGoogleMap doesn't support mutating url related props after initial render. Changed props: %s`, `[${ changedKeys.join(", ") }]`);
+      warning(0 === changedKeys.length, `ScriptjsLoader doesn't support mutating url related props after initial render. Changed props: %s`, `[${ changedKeys.join(", ") }]`);
     }
   }
 
   render () {
     if (this.state.isLoaded) {
-      const {protocol, hostname, port, pathname, query, ...restProps} = this.props;
-      return (
-        <GoogleMap {...restProps} />
-      );
+      return this.props.googleMapElement;
     } else {
       return this.props.loadingElement;
     }
